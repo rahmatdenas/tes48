@@ -705,7 +705,7 @@ function generateRecordDetails(qid) {
   let tautanSuntingRingkasan = `<a href="${wikiUrlUtama}" target="_blank" class="sunting-link" title="Sunting data di Wikidata" aria-label="Sunting data di Wikidata"></a>`;
 
 // 2. Letakkan tautan sunting di dalam tag <h2>
-let designationsHtml = `<h2>Ringkasan ${tautanSuntingRingkasan}</h2>`;
+let designationsHtml = `<h2 style="margin-top:10px">Ringkasan ${tautanSuntingRingkasan}</h2>`;
 designationsHtml += '<ul class="designations">';
 
 let isFirstDesignation = true; // Mencegah duplikasi container peristiwa

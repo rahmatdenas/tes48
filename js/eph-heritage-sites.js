@@ -130,10 +130,10 @@ let wilayahClause1 = '';
   
   if (provInput === 'all') {
     wilayahClause1 = '?provinsi wdt:P31 wd:Q5098 .';
-    wilayahClause2 = 'BIND(wd:Q252 AS ?p131Lokasi) BIND(wd:Q252 AS ?provinsi)'; // <-- Perbaikan di sini
+    wilayahClause2 = 'BIND(wd:Q252 AS ?p131Lokasi)';
   } else {
     wilayahClause1 = `BIND(${provInput} AS ?provinsi)`;
-    wilayahClause2 = `BIND(${provInput} AS ?p131Lokasi) BIND(${provInput} AS ?provinsi)`; // <-- Perbaikan di sini
+    wilayahClause2 = `BIND(${provInput} AS ?p131Lokasi)`; // <-- Perbaikan di sini
   }
   
   // 4. Rakit kueri final (Gunakan regex /.../g untuk memastikan semua instans terganti)

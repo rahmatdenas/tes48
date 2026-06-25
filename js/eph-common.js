@@ -118,19 +118,12 @@ function resetApp() {
     selectRegion.value = 'all';
   }
 
-  // B. Kembalikan Menu Usia ke default
-let selectKombinasi = document.getElementById('filter-sort-kombinasi');
-  
+// B. Kembalikan Menu Usia ke default
+  let selectKombinasi = document.getElementById('filter-sort-kombinasi');
   if (selectKombinasi) {
-    // Jika entitasnya Alam atau Wilayah, hilangkan filter usia dari layar!
-    if (currentKategoriUtama === 'alam' || currentKategoriUtama === 'wilayah') {
-      selectKombinasi.style.display = 'none';
-    } else {
-      selectKombinasi.style.display = ''; // Munculkan kembali untuk bangunan
-      selectKombinasi.value = 'default';
-    }
+    selectKombinasi.value = 'default'; // Cukup reset nilainya saja di sini
   }
-
+  
   // C. Bersihkan Kotak Pencarian dan Angka Hasil
   let searchInput = document.getElementById('search-input');
   if (searchInput) {

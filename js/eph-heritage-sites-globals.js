@@ -127,8 +127,11 @@ function getSparqlQuery4(qid) {
 }
 
 function getSparqlQuery5(qid) {
-  return `SELECT ?siteQid ?vicinityImage ?vicinityCaption ?pastImage ?pastCaption ?interiorImage ?interiorCaption WHERE {
+  return `SELECT ?siteQid ?vicinityImage ?vicinityCaption ?pastImage ?pastCaption ?interiorImage ?interiorCaption ?commonsCat WHERE {
     VALUES ?site { wd:${qid} }
+    
+    # Tarik kategori Commons berbarengan dengan Galeri
+    OPTIONAL { ?site wdt:P373 ?commonsCat . }
     
     OPTIONAL {
       ?site p:P18 ?vicinityStatement .

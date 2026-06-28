@@ -868,7 +868,7 @@ function generateRecordDetails(qid) {
   } else {
     let namaAmanURL = encodeURIComponent(record.title);
     let gFormUrl = `https://docs.google.com/forms/d/e/1FAIpQLSeHMSn6cwcgbZ0xx1CJ5tGXDQacYgzRZUG51STByKUROWXgmg/viewform?usp=pp_url&entry.2138396049=${namaAmanURL}`;
-    articleHtml = `<div class="article main-text nodata"><p>Entitas ini belum memiliki artikel. <a href="${gFormUrl}" target="_blank" rel="noopener noreferrer" class="sunting-linktambah">Tambahkan!</a></p></div>`;
+articleHtml = `<div class="article main-text nodata"><p>${currentNamaKlaster} ini belum memiliki artikel. <a href="${gFormUrl}" target="_blank" rel="noopener noreferrer" class="sunting-linktambah">Tambahkan!</a></p></div>`;
   }
   
 let wikiUrlUtama = `https://www.wikidata.org/wiki/${qid}`;

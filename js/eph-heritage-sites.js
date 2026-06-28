@@ -226,6 +226,17 @@ function dapatkanPropertiWikidata(namaKlaster) {
   return 'P131'; 
 }
 
+// Fungsi penentu Properti Tahun/Waktu
+function dapatkanPropertiTahun(namaKlaster) {
+  if (['Gempa bumi', 'Peristiwa'].includes(namaKlaster)) return 'P585'; // Tanggal kejadian (Point in time)
+  if (['Tokoh'].includes(namaKlaster)) return 'P569'; // Tanggal lahir
+  if (['Publikasi', 'Media massa', 'Latar karya sastra'].includes(namaKlaster)) return 'P577'; // Tanggal terbit
+  if (['Lukisan'].includes(namaKlaster)) return 'P571'; // Tanggal diciptakan
+  
+  // Default untuk Bangunan, Wilayah, dll
+  return 'P571'; // Didirikan / Inception
+}
+
 // Di dalam populateProvinceTypesData (JS 2)
 function populateProvinceTypesData() {
   let inputTxt = document.getElementById('jenis-input').value.trim();
@@ -253,7 +264,7 @@ function populateProvinceTypesData() {
   
   let baseQuery = KUMPULAN_KUERI_0['universal'];
   let propLokasi = dapatkanPropertiWikidata(currentNamaKlaster);
-  
+  let propTahun = dapatkanPropertiTahun(currentNamaKlaster);
   let wilayahClause1 = '';
   let unionEkstra = ''; 
   let hierarkiLokasi = '?p131Lokasi wdt:P131* ?provinsi .'; 
@@ -286,6 +297,7 @@ function populateProvinceTypesData() {
     .replace(/<PLACEHOLDER_KURUNG_TUTUP>/g, kurungTutup)   // Eksekusi Tutup Kurung
     .replace(/<PLACEHOLDER_WILAYAH_1>/g, wilayahClause1)
     .replace(/<PLACEHOLDER_PROP_LOKASI>/g, propLokasi)
+    .replace(/<PLACEHOLDER_PROP_TAHUN>/g, propTahun)
     .replace(/<PLACEHOLDER_HIERARKI_LOKASI>/g, hierarkiLokasi)
     .replace(/<PLACEHOLDER_UNION_EKSTRA>/g, unionEkstra) 
     .replace(/<PLACEHOLDER_JENIS>/g, inputTxt);

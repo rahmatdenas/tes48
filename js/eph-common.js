@@ -356,50 +356,55 @@ function processHashChange() {
 
 function activateMapMarker(qid) {
   let record = Records[qid];
-  if (!record.mapMarker) return; 
+  if (!record.mapMarkers || record.mapMarkers.length === 0) return; 
 
-  // Hitung berapa banyak entitas yang berbagi koordinat persis dengan item ini
-  let countSameLocation = 0;
-currentFilteredRecords.forEach(r => {
-    if (r.lat === record.lat && r.lon === record.lon) {
-      countSameLocation++;
+  // SKENARIO 1: HANYA ADA 1 LOKASI (Logika Lama)
+  if (record.mapMarkers.length === 1) {
+    let singleMarker = record.mapMarkers[0];
+    let singleCoord = record.coords[0];
+    
+    let countSameLocation = 0;
+    currentFilteredRecords.forEach(r => {
+      if (r.coords && r.coords.length > 0) {
+        r.coords.forEach(c => {
+          if (c.lat === singleCoord.lat && c.lon === singleCoord.lon) countSameLocation++;
+        });
+      }
+    });
+
+    if (countSameLocation > 60) {
+      Map.setView([singleCoord.lat, singleCoord.lon], TILE_LAYER_MAX_ZOOM);
+      setTimeout(() => {
+        let visibleParent = Cluster.getVisibleParent(singleMarker);
+        if (visibleParent && visibleParent._icon) {
+          visibleParent._icon.classList.add('cluster-efek-denyut');
+          setTimeout(() => {
+            if (visibleParent._icon) visibleParent._icon.classList.remove('cluster-efek-denyut');
+          }, 4500);
+        }
+      }, 350);
+    } else {
+      Cluster.zoomToShowLayer(singleMarker, function() {
+        Map.setView([singleCoord.lat, singleCoord.lon], Map.getZoom());
+        if (!singleMarker.getPopup().isOpen()) singleMarker.openPopup();
+      });
     }
-  });
-
-  // Skenario 2: Buka dari daftar, koordinat bertumpuk > 60
-  if (countSameLocation > 60) {
-    // 1. Arahkan kamera peta ke lokasi tersebut
-    Map.setView([record.lat, record.lon], TILE_LAYER_MAX_ZOOM);
-
-    // 2. Beri jeda sedikit agar peta selesai merender geseran kamera
+  } 
+  
+  // SKENARIO 2: LOKASI LEBIH DARI 1 (Metode Bounding Box / fitBounds)
+  else {
+    // Buat kotak area yang mencakup semua titik lokasi entitas ini
+    let group = new L.featureGroup(record.mapMarkers);
+    
+    // Arahkan peta agar semua titik masuk ke dalam layar
+    Map.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    
+    // Opsional: Buka popup di titik pertama saja sebagai pancingan
     setTimeout(() => {
-      // Cari elemen gelembung klaster yang menampung titik marker ini
-      let visibleParent = Cluster.getVisibleParent(record.mapMarker);
-      
-      // Pastikan klasternya ditemukan di layar dan memiliki elemen HTML (ikon)
-      if (visibleParent && visibleParent._icon) {
-        
-        // Suntikkan kelas CSS animasi denyut
-        visibleParent._icon.classList.add('cluster-efek-denyut');
-        
-        // Bersihkan (hapus) kelas CSS tersebut setelah 4.5 detik (3x detak denyut)
-        setTimeout(() => {
-          if (visibleParent._icon) {
-            visibleParent._icon.classList.remove('cluster-efek-denyut');
-          }
-        }, 4500);
-      }
-    }, 350); // Jeda 350 milidetik sebelum animasi dimulai
-
-  } else {
-    // Skenario Normal: Jumlah aman, biarkan sistem mengurai klaster dan membuka popup
-    Cluster.zoomToShowLayer(
-      record.mapMarker,
-      function() {
-        Map.setView([record.lat, record.lon], Map.getZoom());
-        if (!record.popup.isOpen()) record.mapMarker.openPopup();
-      }
-    );
+      Cluster.zoomToShowLayer(record.mapMarkers[0], function() {
+        if (!record.mapMarkers[0].getPopup().isOpen()) record.mapMarkers[0].openPopup();
+      });
+    }, 500);
   }
 }
 

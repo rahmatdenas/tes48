@@ -391,19 +391,32 @@ function activateMapMarker(qid) {
     }
   } 
   
-  // SKENARIO 2: LOKASI LEBIH DARI 1 (Metode Bounding Box / fitBounds)
+// SKENARIO 2: LOKASI LEBIH DARI 1 (Metode Bounding Box / fitBounds)
   else {
-    // Buat kotak area yang mencakup semua titik lokasi entitas ini
+    // 1. Buat kotak area yang mencakup semua titik lokasi entitas ini
     let group = new L.featureGroup(record.mapMarkers);
     
-    // Arahkan peta agar semua titik masuk ke dalam layar
+    // 2. Arahkan peta agar semua titik masuk ke dalam satu layar (Hanya 1x pergerakan kamera!)
     Map.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 15 });
     
-    // Opsional: Buka popup di titik pertama saja sebagai pancingan
+    // 3. Beri jeda 500ms agar animasi pergerakan kamera peta selesai
     setTimeout(() => {
-      Cluster.zoomToShowLayer(record.mapMarkers[0], function() {
-        if (!record.mapMarkers[0].getPopup().isOpen()) record.mapMarkers[0].openPopup();
+      
+      // 4. Looping: Berikan efek denyut ke SEMUA titik lokasi entitas ini
+      record.mapMarkers.forEach(marker => {
+        let visibleParent = Cluster.getVisibleParent(marker);
+        
+        // Pastikan titik atau klasternya terlihat di layar dan punya elemen HTML
+        if (visibleParent && visibleParent._icon) {
+          visibleParent._icon.classList.add('cluster-efek-denyut');
+          
+          // Bersihkan efek denyut setelah 4.5 detik
+          setTimeout(() => {
+            if (visibleParent._icon) visibleParent._icon.classList.remove('cluster-efek-denyut');
+          }, 4500);
+        }
       });
+      
     }, 500);
   }
 }

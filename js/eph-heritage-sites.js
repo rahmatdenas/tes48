@@ -1124,7 +1124,7 @@ let infoLokasiHtml = '';
     let latPertama = record.coords[0].lat;
     let lonPertama = record.coords[0].lon;
     
-    let mapsUrl = `https://maps.google.com/?q=$${latPertama},${lonPertama}`;
+let mapsUrl = `https://maps.google.com/?q=${latPertama},${lonPertama}`;
     
     // Info tambahan jika titiknya jamak
     let infoJamak = record.coords.length > 1 ? ` <span style="font-size:0.85em; color:#666; font-style:italic;">(Terdapat ${record.coords.length} titik lokasi)</span>` : '';

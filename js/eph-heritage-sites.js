@@ -388,13 +388,19 @@ function populateCoordinatesData() {
 
     return queryWdqsThenProcess(
       kueriFinal,
-      function(result) {
+function(result) {
         let record = Records[result.siteQid.value];
         if (!record) return; 
 
         let wktBits = result.coord.value.split(/\(|\)| /);
-        record.lat = parseFloat(wktBits[2]);
-        record.lon = parseFloat(wktBits[1]);
+        let currentLon = parseFloat(wktBits[1]);
+        let currentLat = parseFloat(wktBits[2]);
+        
+        // Cek duplikasi agar tidak menyimpan koordinat yang sama persis
+        let isDuplicate = record.coords.some(c => c.lat === currentLat && c.lon === currentLon);
+        if (!isDuplicate) {
+          record.coords.push({ lat: currentLat, lon: currentLon });
+        }
       }
     );
   });
@@ -684,36 +690,52 @@ function populateProvinceIndex() {
 function populateMapAndIndex() {
   let listIndex = document.getElementById('index-list');
   let mapMarkers = [];
+  
   Object.entries(Records).forEach(entry => {
     let qid = entry[0], record = entry[1];
-if (!record.isCompound && record.lat !== undefined && record.lon !== undefined) {
-      let mapMarker = L.marker(
-        [record.lat, record.lon],
-        { icon: L.ExtraMarkers.icon({ icon: '', markerColor : 'orange-dark' }) },
-      );
-      record.mapMarker = mapMarker;
-      mapMarker.bindPopup(record.title, { closeButton: false });
-      let popup = mapMarker.getPopup();
-      popup._qid = qid;
-      record.popup = popup;
-      mapMarkers.push(mapMarker);
+    
+    // LOOPING JIKA KOORDINAT LEBIH DARI SATU
+    if (!record.isCompound && record.coords && record.coords.length > 0) {
+      record.coords.forEach((coord, idx) => {
+        let mapMarker = L.marker(
+          [coord.lat, coord.lon],
+          { icon: L.ExtraMarkers.icon({ icon: '', markerColor : 'orange-dark' }) }
+        );
+        
+        record.mapMarkers.push(mapMarker); // Simpan ke array entitas
+        
+        // Bedakan judul popup jika titiknya banyak
+        let popupTitle = record.coords.length > 1 ? `${record.title} (Lokasi ${idx + 1})` : record.title;
+        mapMarker.bindPopup(popupTitle, { closeButton: false });
+        
+        let popup = mapMarker.getPopup();
+        popup._qid = qid;
+        
+        if (idx === 0) record.popup = popup; // Jadikan titik pertama sebagai popup utama
+        
+        mapMarkers.push(mapMarker); // Simpan ke array global peta
+      });
     }
+    
     let li = document.createElement('li');
     li.innerHTML = `<a href="#${qid}">${record.indexTitle}</a>`;
     record.indexLi = li;
   });
+  
   populateProvinceIndexNodes(); 
   generateFilterSelect();
 }
 
 function populateProvinceIndexNodes() {
   Object.values(Records).forEach(record => {
-    if (record.mapMarker) ProvinceIndex['all'].mapMarkers.push(record.mapMarker);
+    if (record.mapMarkers && record.mapMarkers.length > 0) {
+      record.mapMarkers.forEach(m => ProvinceIndex['all'].mapMarkers.push(m));
+    }
     ProvinceIndex['all'].indexLis.push(record.indexLi);
     
     Object.keys(record.designations).forEach(provQid => {
-      if (record.mapMarker && ProvinceIndex[provQid]) {
-        ProvinceIndex[provQid].mapMarkers.push(record.mapMarker);
+      if (record.mapMarkers && ProvinceIndex[provQid]) {
+        record.mapMarkers.forEach(m => ProvinceIndex[provQid].mapMarkers.push(m));
       }
       if (ProvinceIndex[provQid]) {
         ProvinceIndex[provQid].indexLis.push(record.indexLi);
@@ -951,9 +973,12 @@ function applyIntersectionFilter(preventZoom = false) {
   renderNextChunk();
   updateFeatureCounts(validRecords.length);
 
-  setTimeout(() => {
+setTimeout(() => {
     validRecords.forEach(record => {
-      if (record.mapMarker) validMarkers.push(record.mapMarker);
+      // Loop array marker untuk dimasukkan ke klaster
+      if (record.mapMarkers && record.mapMarkers.length > 0) {
+        record.mapMarkers.forEach(m => validMarkers.push(m));
+      }
     });
 
     if (validMarkers.length > 0) {
@@ -1094,10 +1119,17 @@ let isBersejarah = false;
   }
 
   // 3. Render HTML Lokasi
-  let infoLokasiHtml = '';
-if (record.lat !== undefined && record.lon !== undefined) {
-    let mapsUrl = `https://www.google.com/maps?q=${record.lat},${record.lon}`;
-    infoLokasiHtml = `<p class="koordinat-link">${prefixLokasi}: <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" title="Buka di Google Maps">${namaLokasi}</a></p>`;
+let infoLokasiHtml = '';
+  if (record.coords && record.coords.length > 0) {
+    let latPertama = record.coords[0].lat;
+    let lonPertama = record.coords[0].lon;
+    
+    let mapsUrl = `https://maps.google.com/?q=$${latPertama},${lonPertama}`;
+    
+    // Info tambahan jika titiknya jamak
+    let infoJamak = record.coords.length > 1 ? ` <span style="font-size:0.85em; color:#666; font-style:italic;">(Terdapat ${record.coords.length} titik lokasi)</span>` : '';
+    
+    infoLokasiHtml = `<p class="koordinat-link">${prefixLokasi}: <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" title="Buka di Google Maps">${namaLokasi}</a>${infoJamak}</p>`;
   } else {
     infoLokasiHtml = 
       `<p class="koordinat-link">${prefixLokasi}: ${namaLokasi}</p>` +
@@ -1432,6 +1464,8 @@ class SimpleRecord extends Record {
     this.lat        = undefined;
     this.lon        = undefined;
     this.mapMarker  = undefined;
+    this.coords     = []; // Menampung banyak koordinat {lat, lon}
+    this.mapMarkers = []; // Menampung banyak objek marker Leaflet
     this.popup      = undefined;
     this.shapeLayer = undefined;
   }

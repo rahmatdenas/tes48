@@ -392,11 +392,15 @@ function(result) {
         let record = Records[result.siteQid.value];
         if (!record) return; 
 
+        // === SABUK PENGAMAN (Pastikan wadahnya ada) ===
+        if (!record.coords) record.coords = [];
+        if (!record.mapMarkers) record.mapMarkers = [];
+        // ===============================================
+
         let wktBits = result.coord.value.split(/\(|\)| /);
         let currentLon = parseFloat(wktBits[1]);
         let currentLat = parseFloat(wktBits[2]);
         
-        // Cek duplikasi agar tidak menyimpan koordinat yang sama persis
         let isDuplicate = record.coords.some(c => c.lat === currentLat && c.lon === currentLon);
         if (!isDuplicate) {
           record.coords.push({ lat: currentLat, lon: currentLon });
@@ -1455,6 +1459,10 @@ class Record {
     this.areaTags = new Set();
     this.vicinityImages = [];
     this.interiorImage = undefined;
+    
+    // === TAMBAHKAN DUA BARIS INI DI SINI ===
+    this.coords = []; 
+    this.mapMarkers = [];
   }
 }
 
